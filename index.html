@@ -1,9 +1,11 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DocBot AI — Triagem Médica Virtual</title>
+
     <style>
         :root {
             --primary: #0284c7;
@@ -91,7 +93,7 @@
             border-radius: 12px;
             font-size: 0.92rem;
             line-height: 1.4;
-            word-wrap: break-word;
+            overflow-wrap: anywhere;
         }
 
         .message.bot {
@@ -118,6 +120,7 @@
 
         .chat-footer input {
             flex: 1;
+            min-width: 0;
             padding: 0.7rem 1rem;
             border: 1px solid #cbd5e1;
             border-radius: 8px;
@@ -142,10 +145,30 @@
         .chat-footer button:hover {
             background: var(--primary-hover);
         }
+
+        .chat-footer button:focus-visible,
+        .chat-footer input:focus-visible {
+            outline: 2px solid var(--primary-hover);
+            outline-offset: 2px;
+        }
+
+        @media (max-width: 400px) {
+            .chat-card {
+                height: 85vh;
+            }
+
+            .chat-footer {
+                padding: 0.7rem;
+            }
+
+            .chat-footer button {
+                padding: 0.7rem 0.9rem;
+            }
+        }
     </style>
 </head>
-<body>
 
+<body>
     <div class="chat-card">
         <div class="chat-header">
             <div class="avatar">🩺</div>
@@ -155,26 +178,68 @@
             </div>
         </div>
 
-        <div class="chat-body" id="chatContainer">
+        <div
+            class="chat-body"
+            id="chatContainer"
+            aria-live="polite"
+            aria-label="Conversa com o DocBot AI"
+        >
             <div class="message bot">
-                Olá! Sou o DocBot AI. Descreva seus sintomas ou informe a modalidade do atendimento para iniciarmos a triagem.
+                Olá! Sou o DocBot AI. Descreva seus sintomas ou informe a
+                modalidade do atendimento para iniciarmos a triagem.
+                Este sistema é apenas uma demonstração acadêmica.
             </div>
         </div>
 
         <div class="chat-footer">
-            <input type="text" id="userInput" placeholder="Digite aqui..." onkeypress="tratarEnter(event)">
-            <button onclick="enviarMensagem()">Enviar</button>
+            <input
+                type="text"
+                id="userInput"
+                placeholder="Digite aqui..."
+                aria-label="Digite seus sintomas ou convênio"
+                onkeypress="tratarEnter(event)"
+            >
+            <button type="button" onclick="enviarMensagem()">Enviar</button>
         </div>
     </div>
 
     <script>
         // Processamento da triagem de sintomas
-        function processarTriagemIA(sintoma) {
-            let sintomaNormalizado = sintoma.toLowerCase();
-            let respostaBot = "";
 
-            // Regra inicial de triagem
-            respostaBot = "[TRIAGEM PADRÃO] Encaminhado para consulta geral. Valor: R$ 150,00";
+function processarTriagemIA(sintoma) {
+    let sintomaNormalizado = sintoma.toLowerCase();
+    let respostaBot = "";
+
+    // Ticket #101 - Hospital de Pronto-Socorro
+    if (
+        sintomaNormalizado.includes("dor no peito") ||
+        sintomaNormalizado.includes("falta de ar")
+    ) {
+        respostaBot =
+            "[EMERGÊNCIA VERMELHA] Dirija-se ao pronto-socorro. Custo: R$ 0,00";
+    } else {
+        respostaBot =
+            "[TRIAGEM PADRÃO] Encaminhado para consulta geral. Valor: R$ 150,00";
+    }
+
+    return respostaBot;
+}
+
+
+            // Ticket #102 - Convênio médico
+            } else if (
+                sintomaNormalizado.includes("plano") ||
+                sintomaNormalizado.includes("convenio") ||
+                sintomaNormalizado.includes("unimed")
+            ) {
+                respostaBot =
+                    "[CONVÊNIO ACEITO] Encaminhado para rede credenciada. Copagamento: R$ 35,00";
+
+            // Regra padrão original
+            } else {
+                respostaBot =
+                    "[TRIAGEM PADRÃO] Encaminhado para consulta geral. Valor: R$ 150,00";
+            }
 
             return respostaBot;
         }
@@ -195,15 +260,19 @@
             }, 400);
         }
 
+        // Adiciona mensagens à conversa
         function adicionarBolha(texto, tipo) {
             const container = document.getElementById("chatContainer");
             const bolha = document.createElement("div");
+
             bolha.className = `message ${tipo}`;
             bolha.textContent = texto;
+
             container.appendChild(bolha);
             container.scrollTop = container.scrollHeight;
         }
 
+        // Permite enviar a mensagem usando Enter
         function tratarEnter(event) {
             if (event.key === "Enter") {
                 enviarMensagem();
